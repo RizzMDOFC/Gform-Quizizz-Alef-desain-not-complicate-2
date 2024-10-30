@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-field {
+            margin-bottom: 15px;
+        }
+        .form-field label {
+            font-weight: bold;
+        }
+        .form-field input, .form-field select, .form-field textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Create a New Form</h2>
+    <form id="formBuilder">
+        <div class="form-field">
+            <label for="formTitle">Form Title:</label>
+            <input type="text" id="formTitle" placeholder="Enter form title" required>
+        </div>
+        <div class="form-field">
+            <label for="formDescription">Form Description:</label>
+            <textarea id="formDescription" placeholder="Enter form description"></textarea>
+        </div>
+        <div class="form-field">
+            <button type="button" onclick="addField()">Add Question</button>
+            <div id="questionsContainer"></div>
+        </div>
+        <button type="submit">Generate Form</button>
+    </form>
+</div>
+
+<script>
+    let questionCount = 0;
+
+    function addField() {
+        questionCount++;
+        const questionHtml = `
+            <div class="form-field">
+                <label for="question${questionCount}">Question ${questionCount}:</label>
+                <input type="text" id="question${questionCount}" placeholder="Enter question text">
+                <select id="type${questionCount}">
+                    <option value="text">Text</option>
+                    <option value="radio">Multiple Choice</option>
+                    <option value="checkbox">Checkbox</option>
+                </select>
+            </div>
+        `;
+        document.getElementById('questionsContainer').insertAdjacentHTML('beforeend', questionHtml);
+    }
+
+    document.getElementById('formBuilder').addEventListener('submit', function(event) {
+        event.preventDefault();
+        generateFormFile();
+    });
+
+    function generateFormFile() {
+        const formTitle = document.getElementById('formTitle').value;
+        const formDescription = document.getElementById('formDescription').value;
+        let formHtmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>${formTitle}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f9f9f9; }
+                    h2 { color: #333; }
+                    .question { margin-bottom: 15px; }
+                </style>
+            </head>
+            <body>
+                <h2>${formTitle}</h2>
+                <p>${formDescription}</p>
+                <form id="${formTitle.toLowerCase().replace(/ /g, "-")}">
+        `;
+
+        for (let i = 1; i <= questionCount; i++) {
+            const questionText = document.getElementById(`question${i}`).value;
+            const questionType = document.getElementById(`type${i}`).value;
+
+            if (questionType === 'text') {
+                formHtmlContent += `
+                    <div class="question">
+                        <label>${questionText}</label>
+                        <input type="text" name="question${i}">
+                    </div>
+                `;
+            } else if (questionType === 'radio' || questionType === 'checkbox') {
+                formHtmlContent += `
+                    <div class="question">
+                        <label>${questionText}</label>
+                        <input type="${questionType}" name="question${i}" value="Option 1"> Option 1
+                        <input type="${questionType}" name="question${i}" value="Option 2"> Option 2
+                    </div>
+                `;
+            }
+        }
+
+        formHtmlContent += `
+                <button type="submit">Submit</button>
+                </form>
+                <script>
+                    document.querySelector('form').addEventListener('submit', function(event) {
+                        event.preventDefault();
+                        alert('Form submitted!');
+                    });
+                </script>
+            </body>
+            </html>
+        `;
+
+        downloadFile(formTitle + '.html', formHtmlContent);
+    }
+
+    function downloadFile(filename, content) {
+        const element = document.createElement('a');
+        const file = new Blob([content], { type: 'text/html' });
+        element.href = URL.createObjectURL(file);
+        element.download = filename;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+</script>
+
+</body>
+</html>
